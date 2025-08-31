@@ -7,15 +7,8 @@ import { useDarkMode } from "../hooks/useDarkMode";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("#home");
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const navItems = [
     { href: "#home", label: "Home" },
@@ -27,12 +20,34 @@ const Header = () => {
     { href: "#contact", label: "Contact" },
   ];
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const sectionIds = navItems.map((item) => item.href);
+      let currentSection = "#home";
+      for (const id of sectionIds) {
+        const section = document.querySelector(id);
+        if (section) {
+          const rect = section.getBoundingClientRect();
+          if (rect.top <= 80 && rect.bottom > 80) {
+            currentSection = id;
+            break;
+          }
+        }
+      }
+      setActiveSection(currentSection);
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [navItems]);
+
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
     setIsMenuOpen(false);
+    setActiveSection(href);
   };
 
   useEffect(() => {
@@ -100,11 +115,17 @@ const Header = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
                 onClick={() => scrollToSection(item.href)}
-                className="relative text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 font-medium group"
+                className={`relative text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 font-medium group
+      ${
+        activeSection === item.href
+          ? "text-blue-600 dark:text-blue-400 font-bold"
+          : ""
+      }`}
               >
                 {item.label}
                 <motion.span
-                  className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 group-hover:w-full transition-all duration-300"
+                  className={`absolute -bottom-1 left-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-300
+        ${activeSection === item.href ? "w-full" : "w-0 group-hover:w-full"}`}
                   whileHover={{ width: "100%" }}
                 />
               </motion.button>
@@ -197,7 +218,13 @@ const Header = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       onClick={() => scrollToSection(item.href)}
-                      className="block w-full text-left text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-800 transition-all duration-200 font-medium py-3 px-4 rounded-xl"
+                      className={`block w-full text-left transition-all duration-200 font-medium py-3 px-4 rounded-xl
+      text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-800
+      ${
+        activeSection === item.href
+          ? "bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-bold"
+          : ""
+      }`}
                     >
                       {item.label}
                     </motion.button>
